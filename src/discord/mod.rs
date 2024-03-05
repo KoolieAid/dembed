@@ -11,7 +11,7 @@ pub async fn make() {
         cobalt_client: reqwest::Client::new(),
     };
 
-    let mut discord_client = Client::builder(&token, intents)
+    let mut discord_client = Client::builder(token, intents)
         .event_handler(handler)
         .intents(intents)
         .await

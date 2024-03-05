@@ -23,21 +23,22 @@ impl EventHandler for Handler {
 
         eprintln!("Host: {:?}", url.host_str());
 
-        match url.host_str() {
-            None => return,
-            Some(_) => {
-                let link = cobalt::get_link(&msg.content).await;
-                match link {
-                    Ok(cobalt::ResultType::Direct(url)) => {
-                        send_msg(&ctx, &msg, &url).await;
-                    }
-                    Ok(cobalt::ResultType::Picker(pickers)) => {
-                        send_pickers(&ctx, &msg, &pickers).await;
-                    }
-                    Err(why) => {
-                        eprintln!("Error getting link: {:?}", why);
-                    }
-                }
+        if url.host_str().is_none() {
+            eprintln!("No host found");
+            return;
+        }
+
+        use cobalt::ResultType;
+        let link = cobalt::get_link(&msg.content).await;
+        match link {
+            Ok(ResultType::Direct(url)) => {
+                send_msg(&ctx, &msg, &url).await;
+            }
+            Ok(ResultType::Picker(pickers)) => {
+                send_pickers(&ctx, &msg, &pickers).await;
+            }
+            Err(why) => {
+                eprintln!("Error getting link: {:?}", why);
             }
         }
     }
