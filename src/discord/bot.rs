@@ -1,5 +1,5 @@
 use crate::cobalt;
-use serenity::all::{CreateAttachment, CreateMessage, MessageReference};
+use serenity::all::{CreateAllowedMentions, CreateAttachment, CreateMessage, MessageReference};
 use serenity::model::channel::Message;
 use serenity::prelude::*;
 use url::Url;
@@ -38,7 +38,7 @@ impl EventHandler for Handler {
                         eprintln!("Error getting link: {:?}", why);
                     }
                 }
-            } // Some(_) => return,
+            }
         }
     }
 }
@@ -61,7 +61,8 @@ async fn send_pickers(ctx: &Context, msg: &Message, pickers: &[cobalt::PickerIte
 
     let builder = CreateMessage::default()
         .add_files(results.into_iter())
-        .reference_message(MessageReference::from(msg));
+        .reference_message(MessageReference::from(msg))
+        .allowed_mentions(CreateAllowedMentions::default().replied_user(false));
 
     if let Err(e) = msg.channel_id.send_message(ctx, builder).await {
         eprintln!("Error sending message {:?}", e);
