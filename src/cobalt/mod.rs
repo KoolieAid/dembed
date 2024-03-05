@@ -43,6 +43,6 @@ pub async fn get_link(url: &str) -> Result<ResultType> {
                 Err(anyhow::anyhow!("No pickers found"))
             }
         }
-        _ => Err(anyhow::anyhow!("Status error: {:?}", body.status)),
+        _ => Err(anyhow::anyhow!("E:{}", body.text.unwrap_or_default())),
     }
 }

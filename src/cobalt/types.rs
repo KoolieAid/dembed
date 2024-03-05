@@ -36,8 +36,7 @@ impl RequestBody {
 #[derive(Deserialize, Debug)]
 pub struct ResponseBody {
     pub status: Status,
-    #[allow(unused)]
-    text: Option<String>,
+    pub text: Option<String>,
     pub url: Option<String>,
     pub picker: Option<Vec<PickerItem>>,
 }
