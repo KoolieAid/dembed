@@ -30,25 +30,15 @@ pub async fn get_link(url: &str) -> Result<ResultType> {
     let body: ResponseBody = response.json().await?;
     dbg!(&body);
 
+    let Some(url) = body.url else {
+        eprintln!("No URL found");
+        return Err(anyhow::anyhow!("No URL found"));
+    };
+
     match body.status {
-        Status::Success => {
-            if let Some(url) = body.url {
-                Ok(ResultType::Direct(url))
-            } else {
-                Err(anyhow::anyhow!("No URL found"))
-            }
-        }
-        Status::Redirect => {
-            if let Some(url) = body.url {
-                Ok(ResultType::Direct(url))
-            } else {
-                Err(anyhow::anyhow!("No URL found"))
-            }
-        }
-        Status::Stream => {
-            eprintln!("Stream status not implemented");
-            Err(anyhow::anyhow!("Stream status not implemented"))
-        }
+        Status::Success => Ok(ResultType::Direct(url)),
+        Status::Redirect => Ok(ResultType::Direct(url)),
+        Status::Stream => Ok(ResultType::Direct(url)),
         Status::Picker => {
             if let Some(pickers) = body.picker {
                 Ok(ResultType::Picker(pickers))
@@ -59,4 +49,3 @@ pub async fn get_link(url: &str) -> Result<ResultType> {
         _ => Err(anyhow::anyhow!("Status error: {:?}", body.status)),
     }
 }
-

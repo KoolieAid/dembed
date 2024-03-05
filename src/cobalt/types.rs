@@ -19,12 +19,16 @@ pub enum Status {
 #[derive(Serialize, Debug)]
 pub struct RequestBody {
     url: String,
+    // TT = TikTok. Hence, removing the watermark.
+    #[serde(rename = "isNotTTWatermark")]
+    no_watermark: bool,
 }
 
 impl RequestBody {
     pub fn new(url: &str) -> Self {
         RequestBody {
             url: url.to_string(),
+            no_watermark: true,
         }
     }
 }
