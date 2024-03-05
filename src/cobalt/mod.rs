@@ -28,12 +28,9 @@ pub async fn get_link(url: &str) -> Result<ResultType> {
         .await?;
 
     let body: ResponseBody = response.json().await?;
-    dbg!(&body);
+    dbg!(&body.status);
 
-    let Some(url) = body.url else {
-        eprintln!("No URL found");
-        return Err(anyhow::anyhow!("No URL found"));
-    };
+    let url: String = body.url.unwrap_or_default();
 
     match body.status {
         Status::Success => Ok(ResultType::Direct(url)),

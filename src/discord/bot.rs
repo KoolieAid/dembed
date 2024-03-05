@@ -1,4 +1,5 @@
 use crate::cobalt;
+use anyhow::anyhow;
 use serenity::all::{CreateAllowedMentions, CreateAttachment, CreateMessage, MessageReference};
 use serenity::model::channel::Message;
 use serenity::prelude::*;
@@ -31,29 +32,36 @@ impl EventHandler for Handler {
         use cobalt::ResultType;
         let link = cobalt::get_link(&msg.content).await;
         match link {
-            Ok(ResultType::Direct(url)) => {
-                send_msg(&ctx, &msg, &url).await;
-            }
-            Ok(ResultType::Picker(pickers)) => {
-                send_pickers(&ctx, &msg, &pickers).await;
-            }
-            Err(why) => {
-                eprintln!("Error getting link: {:?}", why);
-            }
+            Ok(ResultType::Direct(url)) => send_msg(&ctx, &msg, &url).await,
+            Ok(ResultType::Picker(pickers)) => send_pickers(&ctx, &msg, &pickers).await,
+            Err(why) => eprintln!("Error getting link: {:?}", why),
         }
     }
 }
 
-async fn send_msg(ctx: &Context, msg: &Message, content: &str) {
-    if let Err(why) = msg.reply(&ctx, content).await {
-        eprintln!("Error sending message: {:?}", why);
+async fn send_msg(ctx: &Context, msg: &Message, direct_link: &str) {
+    // Example use of replying to a message with a direct link
+    // if let Err(why) = msg.reply(&ctx, direct_link).await {
+    //     eprintln!("Error sending message: {:?}", why);
+    // }
+
+    let builder = CreateMessage::default()
+        .reference_message(MessageReference::from(msg))
+        .allowed_mentions(CreateAllowedMentions::default().replied_user(false))
+        .add_file(convert_to_attachment(direct_link).await.unwrap());
+
+    if let Err(e) = msg.channel_id.send_message(ctx, builder).await {
+        eprintln!("Error sending message {:?}", e);
     }
 }
 
 async fn send_pickers(ctx: &Context, msg: &Message, pickers: &[cobalt::PickerItem]) {
     use futures::future::join_all;
 
-    let futures = pickers.iter().map(mapper).collect::<Vec<_>>();
+    let futures = pickers
+        .iter()
+        .map(|item| convert_to_attachment(&item.url))
+        .collect::<Vec<_>>();
     let results = join_all(futures).await;
     let results = results
         .into_iter()
@@ -70,8 +78,19 @@ async fn send_pickers(ctx: &Context, msg: &Message, pickers: &[cobalt::PickerIte
     }
 }
 
-async fn mapper(item: &cobalt::PickerItem) -> anyhow::Result<CreateAttachment> {
-    let response = reqwest::get(&item.url).await?;
+async fn convert_to_attachment(item: &str) -> anyhow::Result<CreateAttachment> {
+    let response = reqwest::get(item).await?;
+    let content_type = response
+        .headers()
+        .get("content-type")
+        .ok_or(anyhow!("Content-Type header is missing"))?;
+    let mut name = String::from("item");
+    match content_type.to_str()? {
+        "video/mp4" => name.push_str(".mp4"),
+        "image/jpeg" => name.push_str(".jpg"),
+        "image/png" => name.push_str(".png"),
+        _ => return Err(anyhow!("Unsupported content type")),
+    }
     let bytes = response.bytes().await?;
-    Ok(CreateAttachment::bytes(bytes, "thumb.png".to_string()))
+    Ok(CreateAttachment::bytes(bytes, name))
 }
