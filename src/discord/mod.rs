@@ -1,10 +1,10 @@
+use dotenv_codegen::dotenv;
 use serenity::prelude::*;
-use std::env;
 
 pub mod bot;
 
 pub async fn make() {
-    let token = env::var("DISCORD_TOKEN").expect("No token found");
+    let token = dotenv!("DISCORD_TOKEN");
     let intents = GatewayIntents::non_privileged() | GatewayIntents::MESSAGE_CONTENT;
 
     let handler = bot::Handler {

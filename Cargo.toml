@@ -13,3 +13,5 @@ serde = { version = "1.0", features = ["derive"] }
 serenity = "0.12"
 dotenv = "0.15"
 dotenv_codegen = "0.15"
+url = "2.5"
+futures = "0.3"

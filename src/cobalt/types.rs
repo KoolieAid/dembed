@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Debug)]
-enum Status {
+pub enum Status {
     #[serde(rename = "error")]
     Error,
     #[serde(rename = "redirect")]
@@ -31,15 +31,15 @@ impl RequestBody {
 
 #[derive(Deserialize, Debug)]
 pub struct ResponseBody {
-    status: Status,
+    pub status: Status,
     text: Option<String>,
-    url: Option<String>,
-    picker: Option<Vec<PickerItem>>,
+    pub url: Option<String>,
+    pub picker: Option<Vec<PickerItem>>,
 }
 
 #[derive(Deserialize, Debug)]
-struct PickerItem {
-    url: String,
+pub struct PickerItem {
+    pub url: String,
     #[serde(rename = "type")]
     item_type: Option<String>,
     thumb: Option<String>,
