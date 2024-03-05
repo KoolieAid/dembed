@@ -1,8 +1,4 @@
-use anyhow::Result;
-use reqwest::Client;
 use serde::{Deserialize, Serialize};
-
-const HOST: &str = "https://co.wuk.sh";
 
 #[derive(Deserialize, Debug)]
 enum Status {
@@ -21,12 +17,20 @@ enum Status {
 }
 
 #[derive(Serialize, Debug)]
-struct RequestBody {
+pub struct RequestBody {
     url: String,
 }
 
+impl RequestBody {
+    pub fn new(url: &str) -> Self {
+        RequestBody {
+            url: url.to_string(),
+        }
+    }
+}
+
 #[derive(Deserialize, Debug)]
-struct ResponseBody {
+pub struct ResponseBody {
     status: Status,
     text: Option<String>,
     url: Option<String>,
@@ -39,25 +43,4 @@ struct PickerItem {
     #[serde(rename = "type")]
     item_type: Option<String>,
     thumb: Option<String>,
-}
-
-pub async fn get_link(url: &str) -> Result<String> {
-    let body = RequestBody {
-        url: url.to_string(),
-    };
-
-    let client = Client::new();
-    let response = client
-        .post(format!("{}/api/json", HOST))
-        .header("Accept", "application/json")
-        .header("Content-Type", "application/json")
-        .json(&body)
-        .send()
-        .await?;
-
-    let body: ResponseBody = response.json().await?;
-    dbg!(&body);
-
-    // return Ok(body.status);
-    todo!("Return link");
 }
