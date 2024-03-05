@@ -4,7 +4,9 @@ use types::{RequestBody, ResponseBody};
 use anyhow::Result;
 use reqwest::Client;
 
-const HOST: &str = "https://co.wuk.sh";
+use dotenv_codegen::dotenv;
+
+const HOST: &str = dotenv!("COBALT_HOST");
 
 pub async fn get_link(url: &str) -> Result<String> {
     let body = RequestBody::new(url);
