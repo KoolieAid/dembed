@@ -15,3 +15,4 @@ dotenv = "0.15"
 dotenv_codegen = "0.15"
 url = "2.5"
 futures = "0.3"
+surrealdb = { version = "1.2.0", features = ["kv-mem"] }
