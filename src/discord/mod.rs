@@ -8,7 +8,7 @@ pub async fn make() {
     let intents = GatewayIntents::non_privileged() | GatewayIntents::MESSAGE_CONTENT;
 
     let handler = bot::Handler {
-        cobalt_client: reqwest::Client::new(),
+        cobalt_client: cobalt::Cobalt::default(),
     };
 
     let mut discord_client = Client::builder(token, intents)
