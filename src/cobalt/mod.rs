@@ -10,33 +10,34 @@ use dotenv_codegen::dotenv;
 const HOST: &str = dotenv!("COBALT_HOST");
 
 #[derive(Debug)]
-pub enum ResultType {
-    Direct(String),
-    Picker(Vec<PickerItem>),
+pub enum ResultCount {
+    Single(String),
+    Multiple(Vec<PickerItem>),
 }
 
 #[derive(Debug)]
-struct Cobalt {
-    http: reqwest::Client;
+pub struct Cobalt {
+    client: Client,
 }
 
+#[allow(dead_code)]
 impl Cobalt {
-    pub fn with(client: Client) -> Cobalt {
-        Cobalt {
-            client,
-        }
-    }
-
     pub fn new() -> Cobalt {
         Cobalt {
             client: Client::new(),
         }
     }
 
-    pub async fn get_link(&self, url: &str) -> Result<ResultType> {
+    pub fn with(client: Client) -> Cobalt {
+        Cobalt {
+            client,
+        }
+    }
+
+    pub async fn get_link(&self, url: &str) -> Result<ResultCount> {
         let body = RequestBody::new(url);
 
-        let client = &self.http;
+        let client = &self.client;
         let response = client
             .post(format!("{}/api/json", HOST))
             .header("Accept", "application/json")
@@ -51,12 +52,12 @@ impl Cobalt {
         let url: String = body.url.unwrap_or_default();
 
         match body.status {
-            Status::Success => Ok(ResultType::Direct(url)),
-            Status::Redirect => Ok(ResultType::Direct(url)),
-            Status::Stream => Ok(ResultType::Direct(url)),
+            Status::Success => Ok(ResultCount::Single(url)),
+            Status::Redirect => Ok(ResultCount::Single(url)),
+            Status::Stream => Ok(ResultCount::Single(url)),
             Status::Picker => {
                 if let Some(pickers) = body.picker {
-                    Ok(ResultType::Picker(pickers))
+                    Ok(ResultCount::Multiple(pickers))
                 } else {
                     Err(anyhow::anyhow!("No pickers found"))
                 }
@@ -65,9 +66,9 @@ impl Cobalt {
         }
     }
 
-    pub async get_bytes(&self, url: &str) -> anyhow::Result<Vec<u8>> {
-        let response = self.http.get(url).send().await?;
-        response.bytes().await?
+    pub async fn get_bytes(&self, url: &str) -> anyhow::Result<Vec<u8>> {
+        let response = self.client.get(url).send().await?;
+        Ok(response.bytes().await?.to_vec())
     }
 }
 

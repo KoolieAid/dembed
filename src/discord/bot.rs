@@ -6,7 +6,7 @@ use serenity::prelude::*;
 use url::Url;
 
 pub struct Handler {
-    pub cobalt_client: reqwest::Client,
+    pub cobalt_client: cobalt::Cobalt,
 }
 
 #[serenity::async_trait]
@@ -29,11 +29,11 @@ impl EventHandler for Handler {
             return;
         }
 
-        use cobalt::ResultType;
-        let link = cobalt::get_link(&msg.content).await;
+        use cobalt::ResultCount;
+        let link = self.cobalt_client.get_link(&msg.content).await;
         match link {
-            Ok(ResultType::Direct(url)) => send_msg(&ctx, &msg, &url).await,
-            Ok(ResultType::Picker(pickers)) => send_pickers(&ctx, &msg, &pickers).await,
+            Ok(ResultCount::Single(url)) => send_msg(&ctx, &msg, &url).await,
+            Ok(ResultCount::Multiple(pickers)) => send_pickers(&ctx, &msg, &pickers).await,
             Err(why) => eprintln!("Error getting link: {:?}", why),
         }
     }
