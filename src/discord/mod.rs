@@ -1,7 +1,6 @@
 use dotenv_codegen::dotenv;
 use serenity::prelude::*;
 
-mod webhook;
 pub mod bot;
 
 pub async fn make() {
