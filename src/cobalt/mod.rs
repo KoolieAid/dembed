@@ -29,9 +29,7 @@ impl Cobalt {
     }
 
     pub fn with(client: Client) -> Cobalt {
-        Cobalt {
-            client,
-        }
+        Cobalt { client }
     }
 
     pub async fn get_link(&self, url: &str) -> Result<ResultCount> {
