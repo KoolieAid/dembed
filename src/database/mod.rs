@@ -6,3 +6,14 @@ pub async fn start_db() -> surrealdb::Result<()> {
 
     Ok(())
 }
+
+#[derive(Debug)]
+pub enum UserType {
+    Free(String),
+    Premium(String),
+}
+
+#[allow(unused)]
+pub async fn get_user_type(user_id: u64) -> anyhow::Result<UserType> {
+    Ok(UserType::Premium("todo!".to_string()))
+}

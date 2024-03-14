@@ -1,6 +1,6 @@
 use crate::cobalt;
 use anyhow::anyhow;
-use serenity::all::{CreateAllowedMentions, CreateAttachment, CreateMessage, MessageReference};
+use serenity::all::{Channel, CreateAllowedMentions, CreateAttachment, CreateMessage, MessageReference};
 use serenity::model::channel::Message;
 use serenity::prelude::*;
 use url::Url;
@@ -30,6 +30,18 @@ impl EventHandler for Handler {
         if url.host_str().is_none() {
             eprintln!("No host found");
             return;
+        }
+
+        match msg.channel(&ctx).await.unwrap() {
+            Channel::Private(ch) => {
+                eprintln!("Private channel");
+            },
+            Channel::Guild(ch) => {
+                eprintln!("Guild channel");
+            },
+            _ => {
+                eprintln!("Unknown channel type");
+            },
         }
 
         use cobalt::ResultCount;
