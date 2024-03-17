@@ -8,6 +8,7 @@ pub async fn start_db() -> surrealdb::Result<()> {
 }
 
 #[derive(Debug)]
+#[allow(unused)]
 pub enum UserType {
     Free(String),
     Premium(String),

@@ -10,12 +10,6 @@ use dotenv_codegen::dotenv;
 const HOST: &str = dotenv!("COBALT_HOST");
 
 #[derive(Debug)]
-pub enum ResultCount {
-    Single(String),
-    Multiple(Vec<PickerItem>),
-}
-
-#[derive(Debug)]
 pub struct Cobalt {
     client: Client,
 }
@@ -32,7 +26,7 @@ impl Cobalt {
         Cobalt { client }
     }
 
-    pub async fn get_link(&self, url: &str) -> Result<ResultCount> {
+    pub async fn get_link(&self, url: &str) -> Result<Vec<PickerItem>> {
         let body = RequestBody::new(url);
 
         let client = &self.client;
@@ -50,12 +44,12 @@ impl Cobalt {
         let url: String = body.url.unwrap_or_default();
 
         match body.status {
-            Status::Success => Ok(ResultCount::Single(url)),
-            Status::Redirect => Ok(ResultCount::Single(url)),
-            Status::Stream => Ok(ResultCount::Single(url)),
+            Status::Success => Ok(vec![url.into()]),
+            Status::Redirect => Ok(vec![url.into()]),
+            Status::Stream => Ok(vec![url.into()]),
             Status::Picker => {
                 if let Some(pickers) = body.picker {
-                    Ok(ResultCount::Multiple(pickers))
+                    Ok(pickers)
                 } else {
                     Err(anyhow::anyhow!("No pickers found"))
                 }

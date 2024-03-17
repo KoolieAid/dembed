@@ -50,3 +50,23 @@ pub struct PickerItem {
     #[allow(unused)]
     thumb: Option<String>,
 }
+
+impl From<&str> for PickerItem {
+    fn from(url: &str) -> Self {
+        PickerItem {
+            url: url.to_string(),
+            item_type: None,
+            thumb: None,
+        }
+    }
+}
+
+impl From<String> for PickerItem {
+    fn from(url: String) -> Self {
+        PickerItem {
+            url,
+            item_type: None,
+            thumb: None,
+        }
+    }
+}
