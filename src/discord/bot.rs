@@ -1,6 +1,8 @@
 use crate::cobalt;
 use anyhow::anyhow;
-use serenity::all::{Channel, CreateAllowedMentions, CreateAttachment, CreateMessage, MessageReference};
+use serenity::all::{
+    Channel, CreateAllowedMentions, CreateAttachment, CreateMessage, MessageReference,
+};
 use serenity::model::channel::Message;
 use serenity::prelude::*;
 use url::Url;
@@ -35,8 +37,11 @@ impl EventHandler for Handler {
         match msg.channel(&ctx).await.unwrap() {
             Channel::Private(ch) => {
                 eprintln!("Private channel");
+                msg.reply(&ctx, "Unsupported").await.unwrap();
             },
             Channel::Guild(ch) => {
+                let links = filter(&msg.content);
+                links.iter().for_each(|l| eprintln!("Link: {}", l));
                 eprintln!("Guild channel");
             },
             _ => {
@@ -55,6 +60,16 @@ impl EventHandler for Handler {
             }
         };
     }
+}
+
+fn filter(content: &str) -> Vec<&str> {
+    use regex::Regex;
+    let re = Regex::new(r"(http|https)://([^\s]*)").unwrap();
+
+    re.captures_iter(content)
+        .filter_map(|c| c.get(0))
+        .map(|c| c.as_str())
+        .collect()
 }
 
 /// Sends a message with 1 attachment.

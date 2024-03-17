@@ -728,6 +728,7 @@ dependencies = [
  "dotenv",
  "dotenv_codegen",
  "futures",
+ "regex",
  "reqwest",
  "serde",
  "serenity",
