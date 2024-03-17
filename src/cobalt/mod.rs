@@ -2,7 +2,7 @@ mod types;
 
 pub use types::{PickerItem, RequestBody, ResponseBody, Status};
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use reqwest::Client;
 
 use dotenv_codegen::dotenv;
@@ -47,13 +47,7 @@ impl Cobalt {
             Status::Success => Ok(vec![url.into()]),
             Status::Redirect => Ok(vec![url.into()]),
             Status::Stream => Ok(vec![url.into()]),
-            Status::Picker => {
-                if let Some(pickers) = body.picker {
-                    Ok(pickers)
-                } else {
-                    Err(anyhow::anyhow!("No pickers found"))
-                }
-            }
+            Status::Picker => body.picker.ok_or(anyhow!("No picker items found")),
             _ => Err(anyhow::anyhow!("E:{}", body.text.unwrap_or_default())),
         }
     }
