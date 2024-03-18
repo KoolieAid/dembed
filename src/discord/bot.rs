@@ -1,6 +1,7 @@
 use crate::database::UserType;
 use crate::{cobalt, database};
 use anyhow::anyhow;
+use futures::future;
 use serenity::all::{
     Channel, CreateAllowedMentions, CreateAttachment, CreateMessage, MessageReference,
 };
@@ -22,40 +23,57 @@ impl EventHandler for Handler {
         }
 
         match msg.channel(&ctx).await.unwrap() {
-            Channel::Private(ch) => {
+            Channel::Private(_) => {
                 eprintln!("Private channel");
                 let user = database::get_user_type(msg.author.id.get()).await.unwrap();
                 match user {
                     UserType::Free(_) => {
                         msg.channel_id
-                            .say(&ctx, "You need to be a premium user to use the bot in a private chat.")
+                            .say(
+                                &ctx,
+                                "You need to be a premium user to use the bot in a private chat.",
+                            )
                             .await
                             .unwrap();
                     }
                     UserType::Premium(_) => {
-                        let links = filter(&msg.content);
-                        links.iter().for_each(|l| eprintln!("Link: {}", l));
                         let og_links = filter(&msg.content);
-                        let og_links = og_links.iter()
-                            .map(|l| self.cobalt_client.get_link(l))
-                            .collect::<Vec<_>>();
+                        let og_links = og_links.iter().map(|l| self.cobalt_client.get_link(l));
 
-                        use futures::future;
-                        let links = future::join_all(og_links).await
-                            .into_iter()
-                            .filter_map(Result::ok)
-                            .collect::<Vec<_>>();
+                        let links = future::join_all(og_links).await;
 
-                        for link in links {
-                            let _ = send_pickers(&ctx, &msg, &link).await;
-                        }
+                        let links = links
+                            .iter()
+                            .filter_map(|l| l.as_ref().ok())
+                            .map(|l| send_pickers(&ctx, &msg, l));
+                        future::join_all(links).await;
                     }
                 }
             }
-            Channel::Guild(ch) => {
-                let links = filter(&msg.content);
-                links.iter().for_each(|l| eprintln!("Link: {}", l));
-                eprintln!("Guild channel");
+            Channel::Guild(_) => {
+                let user = database::get_user_type(msg.author.id.get()).await.unwrap();
+                match user {
+                    UserType::Free(_) => {
+                        let links = filter(&msg.content);
+                        if links.is_empty() {
+                            return;
+                        }
+
+                        let links = links.into_iter().take(1).collect::<Vec<_>>();
+
+                        let links = self.cobalt_client.get_link(links[0]).await.unwrap();
+                        let mut string = String::new();
+                        for link in links {
+                            string.push_str(&link.url);
+                            string.push_str("\n");
+                        }
+
+                        msg.reply(ctx, string).await.unwrap();
+                    }
+                    UserType::Premium(_) => {
+                        todo!();
+                    }
+                }
             }
             _ => {
                 eprintln!("Unknown channel type");
