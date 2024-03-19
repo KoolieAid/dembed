@@ -50,11 +50,11 @@ impl EventHandler for Handler {
                     }
                 }
             }
-            Channel::Guild(_) => {
+            Channel::Guild(chn) => {
                 let user = database::get_user_type(msg.author.id.get()).await.unwrap();
+                let links = filter(&msg.content);
                 match user {
                     UserType::Free(_) => {
-                        let links = filter(&msg.content);
                         if links.is_empty() {
                             return;
                         }
@@ -63,6 +63,7 @@ impl EventHandler for Handler {
 
                         let links = self.cobalt_client.get_link(links[0]).await.unwrap();
                         let mut string = String::new();
+                        string.push_str("If you would like me to send attachments instead, please consider upgrading to premium.\n");
                         for link in links {
                             string.push_str(&link.url);
                             string.push_str("\n");
@@ -71,7 +72,25 @@ impl EventHandler for Handler {
                         msg.reply(ctx, string).await.unwrap();
                     }
                     UserType::Premium(_) => {
-                        todo!();
+                        let links = links.iter().map(|l| self.cobalt_client.get_link(l));
+                        let links = future::join_all(links)
+                            .await
+                            .into_iter()
+                            .collect::<Vec<_>>();
+
+                        let member = msg.member(&ctx).await.unwrap();
+
+                        let tasks = links
+                            .iter()
+                            .filter_map(|l| l.as_ref().ok())
+                            .map(|pickers| webhook::send_link(&ctx, &chn, &member, pickers));
+                        future::join_all(tasks).await;
+
+                        let rg = regex::Regex::new(r"^https?://([a-z]+\.)?[a-z]+\.[a-z]+(\.[a-z]+)?(/.*)?$").unwrap();
+                        
+                        if rg.is_match(&msg.content) {
+                            msg.delete(&ctx).await.unwrap();
+                        }
                     }
                 }
             }
