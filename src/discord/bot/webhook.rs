@@ -14,6 +14,7 @@ async fn get_any_webhook(ctx: &Context, channel: &GuildChannel) -> anyhow::Resul
         .await?
         .into_iter()
         .filter(|w| w.kind == WebhookType::Incoming)
+        .filter(|w| w.token.is_some())
         .collect::<Vec<_>>();
 
     if !webhooks.is_empty() {

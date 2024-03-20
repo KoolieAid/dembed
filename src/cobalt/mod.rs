@@ -48,7 +48,10 @@ impl Cobalt {
             Status::Redirect => Ok(vec![url.into()]),
             Status::Stream => Ok(vec![url.into()]),
             Status::Picker => body.picker.ok_or(anyhow!("No picker items found")),
-            _ => Err(anyhow::anyhow!("E:{}", body.text.unwrap_or_default())),
+            _ => {
+                dbg!(&body.text);
+                Err(anyhow::anyhow!("E:{}", body.text.unwrap_or_default()))
+            }
         }
     }
 
